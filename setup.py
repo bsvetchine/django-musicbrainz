@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 VERSION = __import__("django_musicbrainz").__version__
 LONG_DESCRIPTION = """
-Django Musicbrainz is a small app that allows browsing data from a local musicibrainz database within your django project.
+django-musicbrainz is a small app that allows browsing data from a local musicibrainz database within your django project.
 
 It contains a models.py file describing the musicbrainz database organization and a router.py file allowing read access to the musicbrainz database.
 """ 
@@ -11,7 +11,7 @@ It contains a models.py file describing the musicbrainz database organization an
 setup(
 	name="django-musicbrainz",
 	version=VERSION,
-	description="Django connector app to musicbrainz database",
+	description="Django connector app for musicbrainz database",
 	long_description=LONG_DESCRIPTION,
 	author="Bertrand Svetchine",
 	author_email="bertrand.svetchine@gmail.com",
