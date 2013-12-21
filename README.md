@@ -5,7 +5,7 @@ Django connector app for musicbrainz database.
 
 ## Description
 
-Django Musicbrainz is a small app that allows browsing data from a local musicibrainz database within your django project.
+django-musicbrainz is a small app that allows browsing data from a local musicibrainz database within your django project.
 
 It contains a models.py file describing the musicbrainz database organization and a router.py file allowing read access to the musicbrainz database.
 
