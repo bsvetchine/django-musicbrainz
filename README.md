@@ -22,7 +22,7 @@ Then you should add django_musicbrainz in your INSTALLED_APPS. To do so, edit th
     		'django_musicbrainz',
 	)
 
-You have to tell Django that you will use the musicbrainz database. In your settings.py file you have to specify to set up the musicbrainz database settings.
+You have to tell Django that you will use the musicbrainz database. In your settings.py file you have to set up the musicbrainz database settings.
 
 	DATABASES = {
     		# database settings for your django project
@@ -46,9 +46,11 @@ Once you've set up the musicbrainz database, you have to tell django to use the 
 
 ## Check setup
 
-Launch the django shell of your application and start browsing musicbrainz database
+Launch the django shell of your application
 
 	python manage.py shell
+
+And start browsing musicbrainz database
 
 	from django_musicbrainz.models import Artist
 	Artist.objects.count()
