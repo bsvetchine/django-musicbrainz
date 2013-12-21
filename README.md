@@ -14,7 +14,7 @@ It contains a models.py file describing the musicbrainz database organization an
 ### Download project
 	pip install https://github.com/bsvetchine/django-musicbrainz/zipball/master
 
-### Setup your settings.py
+### Update your settings.py
 You should add django_musicbrainz to your INSTALLED_APPS. To do so, edit the settings.py file of your django project :
 
 	INSTALLED_APPS = (
