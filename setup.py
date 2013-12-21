@@ -11,7 +11,7 @@ It contains a models.py file describing the musicbrainz database organization an
 setup(
 	name="django-musicbrainz",
 	version=VERSION,
-	description="Django connection app to musicbrainz database",
+	description="Django connector app to musicbrainz database",
 	long_description=LONG_DESCRIPTION,
 	author="Bertrand Svetchine",
 	author_email="bertrand.svetchine@gmail.com",
