@@ -47,6 +47,12 @@ class Area(models.Model):
     ended = models.BooleanField()
     comment = models.CharField(max_length=255)
 
+    annotations = models.ManyToManyField(
+        'Annotation', through='AreaAnnotation')
+    areas = models.ManyToManyField('Area', through='LAreaArea')
+    edits = models.ManyToManyField('Edit', through='EditArea')
+    urls = models.ManyToManyField('Url', through='LAreaUrl')
+
     class Meta:
         managed = False
         db_table = 'area'
@@ -90,24 +96,13 @@ class AreaAliasType(models.Model):
 
 
 class AreaAnnotation(models.Model):
-    area = models.ForeignKey(Area, db_column='area')
+    area = models.ForeignKey(Area, db_column='area', primary_key=True)
     annotation = models.ForeignKey(Annotation, db_column='annotation')
 
     class Meta:
         managed = False
         db_table = 'area_annotation'
-
-
-class AreaContainment(models.Model):
-    descendant = models.IntegerField(blank=True, null=True)
-    parent = models.IntegerField(blank=True, null=True)
-    type = models.IntegerField(blank=True, null=True)
-    type_name = models.CharField(max_length=255, blank=True)
-    descendant_hierarchy = models.TextField(blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'area_containment'
+        unique_together = ('area', 'annotation')
 
 
 class AreaGidRedirect(models.Model):
@@ -161,6 +156,32 @@ class Artist(models.Model):
         Area, db_column='end_area',
         related_name='end_artist_set', blank=True, null=True)
 
+    annotations = models.ManyToManyField(
+        'Annotation', through='ArtistAnnotation')
+    areas = models.ManyToManyField(
+        'Area', through='LAreaArtist')
+    artists = models.ManyToManyField(
+        'Artist', through='LArtistArtist')
+    edits = models.ManyToManyField(
+        'Edit', through='EditArtist')
+    instruments = models.ManyToManyField(
+        'Instrument', through='LArtistInstrument')
+    labels = models.ManyToManyField(
+        'Label', through='LArtistLabel')
+    places = models.ManyToManyField(
+        'Place', through='LArtistPlace')
+    recordings = models.ManyToManyField(
+        'Recording', through='LArtistRecording')
+    releases = models.ManyToManyField(
+        'Release', through='LArtistRelease')
+    release_groups = models.ManyToManyField(
+        'ReleaseGroup', through='LArtistReleaseGroup')
+    series = models.ManyToManyField(
+        'Series', through='LArtistSeries')
+    tags = models.ManyToManyField('Tag', through='ArtistTag')
+    urls = models.ManyToManyField('Url', through='LArtistUrl')
+    works = models.ManyToManyField('Work', through='LArtistWork')
+
     class Meta:
         managed = False
         db_table = 'artist'
@@ -204,12 +225,13 @@ class ArtistAliasType(models.Model):
 
 
 class ArtistAnnotation(models.Model):
-    artist = models.ForeignKey(Artist, db_column='artist')
+    artist = models.ForeignKey(Artist, db_column='artist', primary_key=True)
     annotation = models.ForeignKey(Annotation, db_column='annotation')
 
     class Meta:
         managed = False
         db_table = 'artist_annotation'
+        unique_together = ('artist', 'annotation')
 
 
 class ArtistCredit(models.Model):
@@ -219,13 +241,17 @@ class ArtistCredit(models.Model):
     ref_count = models.IntegerField(blank=True, null=True)
     created = models.DateTimeField(blank=True, null=True)
 
+    artists = models.ManyToManyField(
+        'Artist', through='ArtistCreditName')
+
     class Meta:
         managed = False
         db_table = 'artist_credit'
 
 
 class ArtistCreditName(models.Model):
-    artist_credit = models.ForeignKey(ArtistCredit, db_column='artist_credit')
+    artist_credit = models.ForeignKey(
+        ArtistCredit, db_column='artist_credit', primary_key=True)
     position = models.SmallIntegerField()
     artist = models.ForeignKey(Artist, db_column='artist')
     name = models.CharField(max_length=CHARACTER_VARYING_MAX_LENGTH)
@@ -234,6 +260,7 @@ class ArtistCreditName(models.Model):
     class Meta:
         managed = False
         db_table = 'artist_credit_name'
+        unique_together = ('artist_credit', 'position')
 
 
 class ArtistDeletion(models.Model):
@@ -258,7 +285,8 @@ class ArtistGidRedirect(models.Model):
 
 
 class ArtistIpi(models.Model):
-    artist = models.ForeignKey(Artist, db_column='artist')
+    artist = models.ForeignKey(
+        Artist, db_column='artist', primary_key=True)
     ipi = models.CharField(max_length=11)
     edits_pending = models.IntegerField()
     created = models.DateTimeField(blank=True, null=True)
@@ -266,10 +294,12 @@ class ArtistIpi(models.Model):
     class Meta:
         managed = False
         db_table = 'artist_ipi'
+        unique_together = ('artist', 'ipi')
 
 
 class ArtistIsni(models.Model):
-    artist = models.ForeignKey(Artist, db_column='artist')
+    artist = models.ForeignKey(
+        Artist, db_column='artist', primary_key=True)
     isni = models.CharField(max_length=16)
     edits_pending = models.IntegerField()
     created = models.DateTimeField(blank=True, null=True)
@@ -277,6 +307,7 @@ class ArtistIsni(models.Model):
     class Meta:
         managed = False
         db_table = 'artist_isni'
+        unique_together = ('artist', 'isni')
 
 
 class ArtistMeta(models.Model):
@@ -290,17 +321,18 @@ class ArtistMeta(models.Model):
 
 
 class ArtistRatingRaw(models.Model):
-    artist = models.ForeignKey(Artist, db_column='artist')
+    artist = models.ForeignKey(Artist, db_column='artist', primary_key=True)
     editor = models.ForeignKey('Editor', db_column='editor')
     rating = models.SmallIntegerField()
 
     class Meta:
         managed = False
         db_table = 'artist_rating_raw'
+        unique_together = ('artist', 'editor')
 
 
 class ArtistTag(models.Model):
-    artist = models.ForeignKey(Artist, db_column='artist')
+    artist = models.ForeignKey(Artist, db_column='artist', primary_key=True)
     tag = models.ForeignKey('Tag', db_column='tag')
     count = models.IntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
@@ -308,16 +340,18 @@ class ArtistTag(models.Model):
     class Meta:
         managed = False
         db_table = 'artist_tag'
+        unique_together = ('artist', 'tag')
 
 
 class ArtistTagRaw(models.Model):
-    artist = models.ForeignKey(Artist, db_column='artist')
+    artist = models.ForeignKey(Artist, db_column='artist', primary_key=True)
     editor = models.ForeignKey('Editor', db_column='editor')
     tag = models.ForeignKey('Tag', db_column='tag')
 
     class Meta:
         managed = False
         db_table = 'artist_tag_raw'
+        unique_together = ('artist', 'editor', 'tag')
 
 
 class ArtistType(models.Model):
@@ -432,41 +466,45 @@ class Edit(models.Model):
 
 
 class EditArea(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     area = models.ForeignKey(Area, db_column='area')
 
     class Meta:
         managed = False
         db_table = 'edit_area'
+        unique_together = ('edit', 'area')
 
 
 class EditArtist(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     artist = models.ForeignKey(Artist, db_column='artist')
     status = models.SmallIntegerField()
 
     class Meta:
         managed = False
         db_table = 'edit_artist'
+        unique_together = ('edit', 'artist')
 
 
 class EditInstrument(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     instrument = models.ForeignKey('Instrument', db_column='instrument')
 
     class Meta:
         managed = False
         db_table = 'edit_instrument'
+        unique_together = ('edit', 'instrument')
 
 
 class EditLabel(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     label = models.ForeignKey('Label', db_column='label')
     status = models.SmallIntegerField()
 
     class Meta:
         managed = False
         db_table = 'edit_label'
+        unique_together = ('edit', 'label')
 
 
 class EditNote(models.Model):
@@ -482,67 +520,74 @@ class EditNote(models.Model):
 
 
 class EditPlace(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     place = models.ForeignKey('Place', db_column='place')
 
     class Meta:
         managed = False
         db_table = 'edit_place'
+        unique_together = ('edit', 'place')
 
 
 class EditRecording(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     recording = models.ForeignKey('Recording', db_column='recording')
 
     class Meta:
         managed = False
         db_table = 'edit_recording'
+        unique_together = ('edit', 'recording')
 
 
 class EditRelease(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     release = models.ForeignKey('Release', db_column='release')
 
     class Meta:
         managed = False
         db_table = 'edit_release'
+        unique_together = ('edit', 'release')
 
 
 class EditReleaseGroup(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     release_group = models.ForeignKey(
         'ReleaseGroup', db_column='release_group')
 
     class Meta:
         managed = False
         db_table = 'edit_release_group'
+        unique_together = ('edit', 'release_group')
 
 
 class EditSeries(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     series = models.ForeignKey('Series', db_column='series')
 
     class Meta:
         managed = False
         db_table = 'edit_series'
+        unique_together = ('edit', 'series')
 
 
 class EditUrl(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     url = models.ForeignKey('Url', db_column='url')
 
     class Meta:
         managed = False
         db_table = 'edit_url'
+        unique_together = ('edit', 'url')
 
 
 class EditWork(models.Model):
-    edit = models.ForeignKey(Edit, db_column='edit')
+    edit = models.ForeignKey(Edit, db_column='edit', primary_key=True)
     work = models.ForeignKey('Work', db_column='work')
 
     class Meta:
         managed = False
         db_table = 'edit_work'
+        unique_together = ('edit', 'work')
 
 
 class Editor(models.Model):
@@ -568,6 +613,22 @@ class Editor(models.Model):
     ha1 = models.CharField(max_length=32)
     deleted = models.BooleanField()
 
+    artists_subscribed = models.ManyToManyField(
+        'Artist', through='EditorSubscribeArtist')
+    artists_watched = models.ManyToManyField(
+        'Artist', through='EditorWatchArtist')
+    artists_deleted = models.ManyToManyField(
+        'ArtistDeletion', through='EditorSubscribeArtistDeleted')
+    labels_deleted = models.ManyToManyField(
+        'LabelDeletion', through='EditorSubscribeLabelDeleted')
+    languages = models.ManyToManyField('Language', through='EditorLanguage')
+    release_group_types_watched = models.ManyToManyField(
+        'ReleaseGroupPrimaryType', through='EditorWatchReleaseGroupType')
+    release_status_watched = models.ManyToManyField(
+        'ReleaseStatus', through='EditorWatchReleaseStatus')
+    series_deleted = models.ManyToManyField(
+        'SeriesDeletion', through='EditorSubscribeSeriesDeleted')
+
     class Meta:
         managed = False
         db_table = 'editor'
@@ -581,28 +642,34 @@ class EditorCollection(models.Model):
     public = models.BooleanField()
     description = models.TextField()
 
+    releases = models.ManyToManyField(
+        'Release', through='EditorCollectionRelease')
+
     class Meta:
         managed = False
         db_table = 'editor_collection'
 
 
 class EditorCollectionRelease(models.Model):
-    collection = models.ForeignKey(EditorCollection, db_column='collection')
+    collection = models.ForeignKey(
+        EditorCollection, db_column='collection', primary_key=True)
     release = models.ForeignKey('Release', db_column='release')
 
     class Meta:
         managed = False
         db_table = 'editor_collection_release'
+        unique_together = ('collection', 'release')
 
 
 class EditorLanguage(models.Model):
-    editor = models.ForeignKey(Editor, db_column='editor')
+    editor = models.ForeignKey(Editor, db_column='editor', primary_key=True)
     language = models.ForeignKey('Language', db_column='language')
     fluency = models.TextField()
 
     class Meta:
         managed = False
         db_table = 'editor_language'
+        unique_together = ('editor', 'language')
 
 
 class EditorOauthToken(models.Model):
@@ -644,13 +711,14 @@ class EditorSubscribeArtist(models.Model):
 
 
 class EditorSubscribeArtistDeleted(models.Model):
-    editor = models.ForeignKey(Editor, db_column='editor')
+    editor = models.ForeignKey(Editor, db_column='editor', primary_key=True)
     gid = models.ForeignKey(ArtistDeletion, db_column='gid')
     deleted_by = models.ForeignKey(Edit, db_column='deleted_by')
 
     class Meta:
         managed = False
         db_table = 'editor_subscribe_artist_deleted'
+        unique_together = ('editor', 'gid')
 
 
 class EditorSubscribeCollection(models.Model):
@@ -691,13 +759,14 @@ class EditorSubscribeLabel(models.Model):
 
 
 class EditorSubscribeLabelDeleted(models.Model):
-    editor = models.ForeignKey(Editor, db_column='editor')
+    editor = models.ForeignKey(Editor, db_column='editor', primary_key=True)
     gid = models.ForeignKey('LabelDeletion', db_column='gid')
     deleted_by = models.ForeignKey(Edit, db_column='deleted_by')
 
     class Meta:
         managed = False
         db_table = 'editor_subscribe_label_deleted'
+        unique_together = ('editor', 'gid')
 
 
 class EditorSubscribeSeries(models.Model):
@@ -712,22 +781,24 @@ class EditorSubscribeSeries(models.Model):
 
 
 class EditorSubscribeSeriesDeleted(models.Model):
-    editor = models.ForeignKey(Editor, db_column='editor')
+    editor = models.ForeignKey(Editor, db_column='editor', primary_key=True)
     gid = models.ForeignKey('SeriesDeletion', db_column='gid')
     deleted_by = models.ForeignKey(Edit, db_column='deleted_by')
 
     class Meta:
         managed = False
         db_table = 'editor_subscribe_series_deleted'
+        unique_together = ('editor', 'gid')
 
 
 class EditorWatchArtist(models.Model):
-    artist = models.ForeignKey(Artist, db_column='artist')
+    artist = models.ForeignKey(Artist, db_column='artist', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
 
     class Meta:
         managed = False
         db_table = 'editor_watch_artist'
+        unique_together = ('artist', 'editor')
 
 
 class EditorWatchPreferences(models.Model):
@@ -742,23 +813,25 @@ class EditorWatchPreferences(models.Model):
 
 
 class EditorWatchReleaseGroupType(models.Model):
-    editor = models.ForeignKey(Editor, db_column='editor')
+    editor = models.ForeignKey(Editor, db_column='editor', primary_key=True)
     release_group_type = models.ForeignKey(
         'ReleaseGroupPrimaryType', db_column='release_group_type')
 
     class Meta:
         managed = False
         db_table = 'editor_watch_release_group_type'
+        unique_together = ('editor', 'release_group_type')
 
 
 class EditorWatchReleaseStatus(models.Model):
-    editor = models.ForeignKey(Editor, db_column='editor')
+    editor = models.ForeignKey(Editor, db_column='editor', primary_key=True)
     release_status = models.ForeignKey(
         'ReleaseStatus', db_column='release_status')
 
     class Meta:
         managed = False
         db_table = 'editor_watch_release_status'
+        unique_together = ('editor', 'release_status')
 
 
 class Gender(models.Model):
@@ -784,6 +857,17 @@ class Instrument(models.Model):
     last_updated = models.DateTimeField(blank=True, null=True)
     comment = models.CharField(max_length=255)
     description = models.TextField()
+
+    annotations = models.ManyToManyField(
+        'Annotation', through='InstrumentAnnotation')
+    areas = models.ManyToManyField(
+        'Area', through='LAreaInstrument')
+    edits = models.ManyToManyField(
+        'Edit', through='EditInstrument')
+    instruments = models.ManyToManyField(
+        'Instrument', through='LInstrumentInstrument')
+    urls = models.ManyToManyField(
+        'Url', through='LInstrumentUrl')
 
     class Meta:
         managed = False
@@ -828,12 +912,14 @@ class InstrumentAliasType(models.Model):
 
 
 class InstrumentAnnotation(models.Model):
-    instrument = models.ForeignKey(Instrument, db_column='instrument')
+    instrument = models.ForeignKey(
+        Instrument, db_column='instrument', primary_key=True)
     annotation = models.ForeignKey(Annotation, db_column='annotation')
 
     class Meta:
         managed = False
         db_table = 'instrument_annotation'
+        unique_together = ('instrument', 'annotation')
 
 
 class InstrumentGidRedirect(models.Model):
@@ -1904,6 +1990,21 @@ class Label(models.Model):
     last_updated = models.DateTimeField(blank=True, null=True)
     ended = models.BooleanField()
 
+    annotations = models.ManyToManyField(
+        'Annotation', through='LabelAnnotation')
+    areas = models.ManyToManyField(
+        'Area', through='LAreaLabel')
+    edits = models.ManyToManyField(
+        'Edit', through='EditLabel')
+    instruments = models.ManyToManyField(
+        'Instrument', through='LInstrumentLabel')
+    labels = models.ManyToManyField('Label', through='LLabelLabel')
+    places = models.ManyToManyField('Place', through='LLabelPlace')
+    series = models.ManyToManyField('Series', through='LLabelSeries')
+    tags = models.ManyToManyField('Tag', through='LabelTag')
+    urls = models.ManyToManyField('Url', through='LLabelUrl')
+    works = models.ManyToManyField('Work', through='LLabelWork')
+
     class Meta:
         managed = False
         db_table = 'label'
@@ -1947,12 +2048,13 @@ class LabelAliasType(models.Model):
 
 
 class LabelAnnotation(models.Model):
-    label = models.ForeignKey(Label, db_column='label')
+    label = models.ForeignKey(Label, db_column='label', primary_key=True)
     annotation = models.ForeignKey(Annotation, db_column='annotation')
 
     class Meta:
         managed = False
         db_table = 'label_annotation'
+        unique_together = ('label', 'annotation')
 
 
 class LabelDeletion(models.Model):
@@ -1977,7 +2079,7 @@ class LabelGidRedirect(models.Model):
 
 
 class LabelIpi(models.Model):
-    label = models.ForeignKey(Label, db_column='label')
+    label = models.ForeignKey(Label, db_column='label', primary_key=True)
     ipi = models.CharField(max_length=11)
     edits_pending = models.IntegerField()
     created = models.DateTimeField(blank=True, null=True)
@@ -1985,10 +2087,11 @@ class LabelIpi(models.Model):
     class Meta:
         managed = False
         db_table = 'label_ipi'
+        unique_together = ('label', 'ipi')
 
 
 class LabelIsni(models.Model):
-    label = models.ForeignKey(Label, db_column='label')
+    label = models.ForeignKey(Label, db_column='label', primary_key=True)
     isni = models.CharField(max_length=16)
     edits_pending = models.IntegerField()
     created = models.DateTimeField(blank=True, null=True)
@@ -1996,6 +2099,7 @@ class LabelIsni(models.Model):
     class Meta:
         managed = False
         db_table = 'label_isni'
+        unique_together = ('label', 'isni')
 
 
 class LabelMeta(models.Model):
@@ -2009,17 +2113,18 @@ class LabelMeta(models.Model):
 
 
 class LabelRatingRaw(models.Model):
-    label = models.ForeignKey(Label, db_column='label')
+    label = models.ForeignKey(Label, db_column='label', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
     rating = models.SmallIntegerField()
 
     class Meta:
         managed = False
         db_table = 'label_rating_raw'
+        unique_together = ('label', 'editor')
 
 
 class LabelTag(models.Model):
-    label = models.ForeignKey(Label, db_column='label')
+    label = models.ForeignKey(Label, db_column='label', primary_key=True)
     tag = models.ForeignKey('Tag', db_column='tag')
     count = models.IntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
@@ -2027,16 +2132,18 @@ class LabelTag(models.Model):
     class Meta:
         managed = False
         db_table = 'label_tag'
+        unique_together = ('label', 'tag')
 
 
 class LabelTagRaw(models.Model):
-    label = models.ForeignKey(Label, db_column='label')
+    label = models.ForeignKey(Label, db_column='label', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
     tag = models.ForeignKey('Tag', db_column='tag')
 
     class Meta:
         managed = False
         db_table = 'label_tag_raw'
+        unique_together = ('label', 'editor', 'tag')
 
 
 class LabelType(models.Model):
@@ -2079,13 +2186,20 @@ class Link(models.Model):
     created = models.DateTimeField(blank=True, null=True)
     ended = models.BooleanField()
 
+    creditable_attribute_types = models.ManyToManyField(
+        'LinkCreditableAttributeType', through='LinkAttributeCredit')
+    attribute_types = models.ManyToManyField(
+        'LinkAttributeType', through='LinkAttribute')
+    text_attribute_types = models.ManyToManyField(
+        'LinkTextAttributeType', through='LinkAttributeTextValue')
+
     class Meta:
         managed = False
         db_table = 'link'
 
 
 class LinkAttribute(models.Model):
-    link = models.ForeignKey(Link, db_column='link')
+    link = models.ForeignKey(Link, db_column='link', primary_key=True)
     attribute_type = models.ForeignKey(
         'LinkAttributeType', db_column='attribute_type')
     created = models.DateTimeField(blank=True, null=True)
@@ -2093,10 +2207,11 @@ class LinkAttribute(models.Model):
     class Meta:
         managed = False
         db_table = 'link_attribute'
+        unique_together = ('link', 'attribute_type')
 
 
 class LinkAttributeCredit(models.Model):
-    link = models.ForeignKey(Link, db_column='link')
+    link = models.ForeignKey(Link, db_column='link', primary_key=True)
     attribute_type = models.ForeignKey(
         'LinkCreditableAttributeType', db_column='attribute_type')
     credited_as = models.TextField()
@@ -2104,10 +2219,11 @@ class LinkAttributeCredit(models.Model):
     class Meta:
         managed = False
         db_table = 'link_attribute_credit'
+        unique_together = ('link', 'attribute_type')
 
 
 class LinkAttributeTextValue(models.Model):
-    link = models.ForeignKey(Link, db_column='link')
+    link = models.ForeignKey(Link, db_column='link', primary_key=True)
     attribute_type = models.ForeignKey(
         'LinkTextAttributeType', db_column='attribute_type')
     text_value = models.TextField()
@@ -2115,6 +2231,7 @@ class LinkAttributeTextValue(models.Model):
     class Meta:
         managed = False
         db_table = 'link_attribute_text_value'
+        unique_together = ('link', 'attribute_type')
 
 
 class LinkAttributeType(models.Model):
@@ -2174,13 +2291,17 @@ class LinkType(models.Model):
     entity0_cardinality = models.IntegerField()
     entity1_cardinality = models.IntegerField()
 
+    attribute_types = models.ManyToManyField(
+        'LinkAttributeType', through='LinkTypeAttributeType')
+
     class Meta:
         managed = False
         db_table = 'link_type'
 
 
 class LinkTypeAttributeType(models.Model):
-    link_type = models.ForeignKey(LinkType, db_column='link_type')
+    link_type = models.ForeignKey(
+        LinkType, db_column='link_type', primary_key=True)
     attribute_type = models.ForeignKey(
         LinkAttributeType, db_column='attribute_type')
     min = models.SmallIntegerField(blank=True, null=True)
@@ -2190,6 +2311,7 @@ class LinkTypeAttributeType(models.Model):
     class Meta:
         managed = False
         db_table = 'link_type_attribute_type'
+        unique_together = ('link_type', 'attribute_type')
 
 
 class Medium(models.Model):
@@ -2274,6 +2396,19 @@ class Place(models.Model):
     end_date_day = models.SmallIntegerField(blank=True, null=True)
     ended = models.BooleanField()
 
+    annotations = models.ManyToManyField(
+        'Annotation', through='PlaceAnnotation')
+    areas = models.ManyToManyField(
+        'Area', through='LAreaPlace')
+    edits = models.ManyToManyField(
+        'Edit', through='EditPlace')
+    instruments = models.ManyToManyField(
+        'Instrument', through='LInstrumentPlace')
+    places = models.ManyToManyField('Place', through='LPlacePlace')
+    tags = models.ManyToManyField('Tag', through='PlaceTag')
+    urls = models.ManyToManyField('Url', through='LPlaceUrl')
+    works = models.ManyToManyField('Work', through='LPlaceWork')
+
     class Meta:
         managed = False
         db_table = 'place'
@@ -2317,12 +2452,13 @@ class PlaceAliasType(models.Model):
 
 
 class PlaceAnnotation(models.Model):
-    place = models.ForeignKey(Place, db_column='place')
+    place = models.ForeignKey(Place, db_column='place', primary_key=True)
     annotation = models.ForeignKey(Annotation, db_column='annotation')
 
     class Meta:
         managed = False
         db_table = 'place_annotation'
+        unique_together = ('place', 'annotation')
 
 
 class PlaceGidRedirect(models.Model):
@@ -2336,7 +2472,7 @@ class PlaceGidRedirect(models.Model):
 
 
 class PlaceTag(models.Model):
-    place = models.ForeignKey(Place, db_column='place')
+    place = models.ForeignKey(Place, db_column='place', primary_key=True)
     tag = models.ForeignKey('Tag', db_column='tag')
     count = models.IntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
@@ -2344,16 +2480,18 @@ class PlaceTag(models.Model):
     class Meta:
         managed = False
         db_table = 'place_tag'
+        unique_together = ('place', 'tag')
 
 
 class PlaceTagRaw(models.Model):
-    place = models.ForeignKey(Place, db_column='place')
+    place = models.ForeignKey(Place, db_column='place', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
     tag = models.ForeignKey('Tag', db_column='tag')
 
     class Meta:
         managed = False
         db_table = 'place_tag_raw'
+        unique_together = ('place', 'editor', 'tag')
 
 
 class PlaceType(models.Model):
@@ -2380,18 +2518,43 @@ class Recording(models.Model):
     last_updated = models.DateTimeField(blank=True, null=True)
     video = models.BooleanField()
 
+    annotations = models.ManyToManyField(
+        'Annotation', through='RecordingAnnotation')
+    areas = models.ManyToManyField(
+        'Area', through='LAreaRecording')
+    edits = models.ManyToManyField(
+        'Edit', through='EditRecording')
+    labels = models.ManyToManyField(
+        'Label', through='LLabelRecording')
+    instruments = models.ManyToManyField(
+        'Instrument', through='LInstrumentRecording')
+    places = models.ManyToManyField(
+        'Place', through='LPlaceRecording')
+    recording = models.ManyToManyField(
+        'Recording', through='LRecordingRecording')
+    series = models.ManyToManyField(
+        'Series', through='LRecordingSeries')
+    tags = models.ManyToManyField(
+        'Tag', through='RecordingTag')
+    urls = models.ManyToManyField(
+        'Url', through='LRecordingUrl')
+    work = models.ManyToManyField(
+        'Work', through='LRecordingWork')
+
     class Meta:
         managed = False
         db_table = 'recording'
 
 
 class RecordingAnnotation(models.Model):
-    recording = models.ForeignKey(Recording, db_column='recording')
+    recording = models.ForeignKey(
+        Recording, db_column='recording', primary_key=True)
     annotation = models.ForeignKey(Annotation, db_column='annotation')
 
     class Meta:
         managed = False
         db_table = 'recording_annotation'
+        unique_together = ('recording', 'annotation')
 
 
 class RecordingGidRedirect(models.Model):
@@ -2415,30 +2578,20 @@ class RecordingMeta(models.Model):
 
 
 class RecordingRatingRaw(models.Model):
-    recording = models.ForeignKey(Recording, db_column='recording')
+    recording = models.ForeignKey(
+        Recording, db_column='recording', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
     rating = models.SmallIntegerField()
 
     class Meta:
         managed = False
         db_table = 'recording_rating_raw'
-
-
-class RecordingSeries(models.Model):
-    recording = models.IntegerField(blank=True, null=True)
-    series = models.IntegerField(blank=True, null=True)
-    relationship = models.IntegerField(blank=True, null=True)
-    link_order = models.IntegerField(blank=True, null=True)
-    link = models.IntegerField(blank=True, null=True)
-    text_value = models.TextField(blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'recording_series'
+        unique_together = ('recording', 'editor')
 
 
 class RecordingTag(models.Model):
-    recording = models.ForeignKey(Recording, db_column='recording')
+    recording = models.ForeignKey(
+        Recording, db_column='recording', primary_key=True)
     tag = models.ForeignKey('Tag', db_column='tag')
     count = models.IntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
@@ -2446,16 +2599,19 @@ class RecordingTag(models.Model):
     class Meta:
         managed = False
         db_table = 'recording_tag'
+        unique_together = ('recording', 'tag')
 
 
 class RecordingTagRaw(models.Model):
-    recording = models.ForeignKey(Recording, db_column='recording')
+    recording = models.ForeignKey(
+        Recording, db_column='recording', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
     tag = models.ForeignKey('Tag', db_column='tag')
 
     class Meta:
         managed = False
         db_table = 'recording_tag_raw'
+        unique_together = ('recording', 'editor')
 
 
 class Release(models.Model):
@@ -2480,22 +2636,43 @@ class Release(models.Model):
     quality = models.SmallIntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
 
+    annotations = models.ManyToManyField(
+        'Annotation', through='ReleaseAnnotation')
+    areas = models.ManyToManyField(
+        'Area', through='LAreaRelease')
+    countries = models.ManyToManyField('CountryArea', through='ReleaseCountry')
+    edits = models.ManyToManyField('Edit', through='EditRelease')
+    instruments = models.ManyToManyField(
+        'Instrument', through='LInstrumentRelease')
+    labels = models.ManyToManyField(
+        'Label', through='LLabelRelease')
+    places = models.ManyToManyField(
+        'Place', through='LPlaceRelease')
+    recordings = models.ManyToManyField(
+        'Recording', through='LRecordingRelease')
+    releases = models.ManyToManyField('Release', through='LReleaseRelease')
+    series = models.ManyToManyField('Series', through='LReleaseSeries')
+    tags = models.ManyToManyField('Tag', through='ReleaseTag')
+    urls = models.ManyToManyField('Url', through='LReleaseUrl')
+    works = models.ManyToManyField('Work', through='LReleaseWork')
+
     class Meta:
         managed = False
         db_table = 'release'
 
 
 class ReleaseAnnotation(models.Model):
-    release = models.ForeignKey(Release, db_column='release')
+    release = models.ForeignKey(Release, db_column='release', primary_key=True)
     annotation = models.ForeignKey(Annotation, db_column='annotation')
 
     class Meta:
         managed = False
         db_table = 'release_annotation'
+        unique_together = ('release', 'annotation')
 
 
 class ReleaseCountry(models.Model):
-    release = models.ForeignKey(Release, db_column='release')
+    release = models.ForeignKey(Release, db_column='release', primary_key=True)
     country = models.ForeignKey(CountryArea, db_column='country')
     date_year = models.SmallIntegerField(blank=True, null=True)
     date_month = models.SmallIntegerField(blank=True, null=True)
@@ -2504,6 +2681,7 @@ class ReleaseCountry(models.Model):
     class Meta:
         managed = False
         db_table = 'release_country'
+        unique_together = ('release', 'country')
 
 
 class ReleaseCoverart(models.Model):
@@ -2514,18 +2692,6 @@ class ReleaseCoverart(models.Model):
     class Meta:
         managed = False
         db_table = 'release_coverart'
-
-
-class ReleaseEvent(models.Model):
-    release = models.IntegerField(blank=True, null=True)
-    date_year = models.SmallIntegerField(blank=True, null=True)
-    date_month = models.SmallIntegerField(blank=True, null=True)
-    date_day = models.SmallIntegerField(blank=True, null=True)
-    country = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'release_event'
 
 
 class ReleaseGidRedirect(models.Model):
@@ -2549,18 +2715,46 @@ class ReleaseGroup(models.Model):
     edits_pending = models.IntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
 
+    annotations = models.ManyToManyField(
+        'Annotation', through='ReleaseGroupAnnotation')
+    areas = models.ManyToManyField(
+        'Area', through='LAreaReleaseGroup')
+    edits = models.ManyToManyField(
+        'Edit', through='EditReleaseGroup')
+    instruments = models.ManyToManyField(
+        'Instrument', through='LInstrumentReleaseGroup')
+    labels = models.ManyToManyField(
+        'Label', through='LLabelReleaseGroup')
+    places = models.ManyToManyField(
+        'Place', through='LPlaceReleaseGroup')
+    recordings = models.ManyToManyField(
+        'Recording', through='LRecordingReleaseGroup')
+    releases = models.ManyToManyField(
+        'Release', through='LReleaseReleaseGroup')
+    release_groups = models.ManyToManyField(
+        'ReleaseGroup', through='LReleaseGroupReleaseGroup')
+    secondary_types = models.ManyToManyField(
+        'ReleaseGroupSecondaryType', through='ReleaseGroupSecondaryTypeJoin')
+    series = models.ManyToManyField(
+        'Series', through='LReleaseGroupSeries')
+    tags = models.ManyToManyField('Tag', through='ReleaseGroupTag')
+    urls = models.ManyToManyField('Url', through='LReleaseGroupUrl')
+    works = models.ManyToManyField('Work', through='LReleaseGroupWork')
+
     class Meta:
         managed = False
         db_table = 'release_group'
 
 
 class ReleaseGroupAnnotation(models.Model):
-    release_group = models.ForeignKey(ReleaseGroup, db_column='release_group')
+    release_group = models.ForeignKey(
+        ReleaseGroup, db_column='release_group', primary_key=True)
     annotation = models.ForeignKey(Annotation, db_column='annotation')
 
     class Meta:
         managed = False
         db_table = 'release_group_annotation'
+        unique_together = ('release_group', 'annotation')
 
 
 class ReleaseGroupGidRedirect(models.Model):
@@ -2601,13 +2795,15 @@ class ReleaseGroupPrimaryType(models.Model):
 
 
 class ReleaseGroupRatingRaw(models.Model):
-    release_group = models.ForeignKey(ReleaseGroup, db_column='release_group')
+    release_group = models.ForeignKey(
+        ReleaseGroup, db_column='release_group', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
     rating = models.SmallIntegerField()
 
     class Meta:
         managed = False
         db_table = 'release_group_rating_raw'
+        unique_together = ('release_group', 'editor')
 
 
 class ReleaseGroupSecondaryType(models.Model):
@@ -2625,7 +2821,7 @@ class ReleaseGroupSecondaryType(models.Model):
 
 class ReleaseGroupSecondaryTypeJoin(models.Model):
     release_group = models.ForeignKey(
-        ReleaseGroup, db_column='release_group')
+        ReleaseGroup, db_column='release_group', primary_key=True)
     secondary_type = models.ForeignKey(
         ReleaseGroupSecondaryType, db_column='secondary_type')
     created = models.DateTimeField()
@@ -2633,23 +2829,12 @@ class ReleaseGroupSecondaryTypeJoin(models.Model):
     class Meta:
         managed = False
         db_table = 'release_group_secondary_type_join'
-
-
-class ReleaseGroupSeries(models.Model):
-    release_group = models.IntegerField(blank=True, null=True)
-    series = models.IntegerField(blank=True, null=True)
-    relationship = models.IntegerField(blank=True, null=True)
-    link_order = models.IntegerField(blank=True, null=True)
-    link = models.IntegerField(blank=True, null=True)
-    text_value = models.TextField(blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'release_group_series'
+        unique_together = ('release_group', 'secondary_type')
 
 
 class ReleaseGroupTag(models.Model):
-    release_group = models.ForeignKey(ReleaseGroup, db_column='release_group')
+    release_group = models.ForeignKey(
+        ReleaseGroup, db_column='release_group', primary_key=True)
     tag = models.ForeignKey('Tag', db_column='tag')
     count = models.IntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
@@ -2657,16 +2842,19 @@ class ReleaseGroupTag(models.Model):
     class Meta:
         managed = False
         db_table = 'release_group_tag'
+        unique_together = ('release_group', 'tag')
 
 
 class ReleaseGroupTagRaw(models.Model):
-    release_group = models.ForeignKey(ReleaseGroup, db_column='release_group')
+    release_group = models.ForeignKey(
+        ReleaseGroup, db_column='release_group', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
     tag = models.ForeignKey('Tag', db_column='tag')
 
     class Meta:
         managed = False
         db_table = 'release_group_tag_raw'
+        unique_together = ('release_group', 'editor', 'tag')
 
 
 class ReleaseLabel(models.Model):
@@ -2724,19 +2912,6 @@ class ReleaseRaw(models.Model):
         db_table = 'release_raw'
 
 
-class ReleaseSeries(models.Model):
-    release = models.IntegerField(blank=True, null=True)
-    series = models.IntegerField(blank=True, null=True)
-    relationship = models.IntegerField(blank=True, null=True)
-    link_order = models.IntegerField(blank=True, null=True)
-    link = models.IntegerField(blank=True, null=True)
-    text_value = models.TextField(blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'release_series'
-
-
 class ReleaseStatus(models.Model):
     id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -2751,7 +2926,7 @@ class ReleaseStatus(models.Model):
 
 
 class ReleaseTag(models.Model):
-    release = models.ForeignKey(Release, db_column='release')
+    release = models.ForeignKey(Release, db_column='release', primary_key=True)
     tag = models.ForeignKey('Tag', db_column='tag')
     count = models.IntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
@@ -2759,16 +2934,18 @@ class ReleaseTag(models.Model):
     class Meta:
         managed = False
         db_table = 'release_tag'
+        unique_together = ('release', 'tag')
 
 
 class ReleaseTagRaw(models.Model):
-    release = models.ForeignKey(Release, db_column='release')
+    release = models.ForeignKey(Release, db_column='release', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
     tag = models.ForeignKey('Tag', db_column='tag')
 
     class Meta:
         managed = False
         db_table = 'release_tag_raw'
+        unique_together = ('release', 'editor', 'tag')
 
 
 class ReleaseUnknownCountry(models.Model):
@@ -2818,6 +2995,23 @@ class Series(models.Model):
     edits_pending = models.IntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
 
+    annotations = models.ManyToManyField(
+        'Annotation', through='SeriesAnnotation')
+    areas = models.ManyToManyField(
+        'Area', through='LAreaSeries')
+    edits = models.ManyToManyField(
+        'Edit', through='EditSeries')
+    instruments = models.ManyToManyField(
+        'Instrument', through='LInstrumentSeries')
+    places = models.ManyToManyField(
+        'Place', through='LPlaceSeries')
+    series = models.ManyToManyField(
+        'Series', through='LSeriesSeries')
+    urls = models.ManyToManyField(
+        'Url', through='LSeriesUrl')
+    works = models.ManyToManyField(
+        'Work', through='LSeriesWork')
+
     class Meta:
         managed = False
         db_table = 'series'
@@ -2861,12 +3055,13 @@ class SeriesAliasType(models.Model):
 
 
 class SeriesAnnotation(models.Model):
-    series = models.ForeignKey(Series, db_column='series')
+    series = models.ForeignKey(Series, db_column='series', primary_key=True)
     annotation = models.ForeignKey(Annotation, db_column='annotation')
 
     class Meta:
         managed = False
         db_table = 'series_annotation'
+        unique_together = ('series', 'annotation')
 
 
 class SeriesDeletion(models.Model):
@@ -2922,6 +3117,8 @@ class Tag(models.Model):
     name = models.CharField(unique=True, max_length=255)
     ref_count = models.IntegerField()
 
+    tags = models.ManyToManyField('Tag', through='TagRelation')
+
     class Meta:
         managed = False
         db_table = 'tag'
@@ -2930,7 +3127,7 @@ class Tag(models.Model):
 class TagRelation(models.Model):
     tag1 = models.ForeignKey(
         Tag, db_column='tag1',
-        related_name='tag1_tagrelation_set')
+        related_name='tag1_tagrelation_set', primary_key=True)
     tag2 = models.ForeignKey(
         Tag, db_column='tag2',
         related_name='tag2_tagrelation_set')
@@ -2940,6 +3137,7 @@ class TagRelation(models.Model):
     class Meta:
         managed = False
         db_table = 'tag_relation'
+        unique_together = ('tag1', 'tag2')
 
 
 class Track(models.Model):
@@ -2989,6 +3187,9 @@ class Url(models.Model):
     edits_pending = models.IntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
 
+    edits = models.ManyToManyField('Edit', through='EditUrl')
+    urls = models.ManyToManyField('Url', through='LUrlUrl')
+
     class Meta:
         managed = False
         db_table = 'url'
@@ -3028,6 +3229,18 @@ class Work(models.Model):
     last_updated = models.DateTimeField(blank=True, null=True)
     language = models.ForeignKey(
         Language, db_column='language', blank=True, null=True)
+
+    annotations = models.ManyToManyField(
+        'Annotation', through='WorkAnnotation')
+    areas = models.ManyToManyField(
+        'Area', through='LAreaWork')
+    edits = models.ManyToManyField(
+        'Edit', through='EditWork')
+    instruments = models.ManyToManyField(
+        'Instrument', through='LInstrumentWork')
+    tags = models.ManyToManyField('Tag', through='WorkTag')
+    works = models.ManyToManyField('Work', through='LWorkWork')
+    urls = models.ManyToManyField('Url', through='LUrlWork')
 
     class Meta:
         managed = False
@@ -3072,12 +3285,13 @@ class WorkAliasType(models.Model):
 
 
 class WorkAnnotation(models.Model):
-    work = models.ForeignKey(Work, db_column='work')
+    work = models.ForeignKey(Work, db_column='work', primary_key=True)
     annotation = models.ForeignKey(Annotation, db_column='annotation')
 
     class Meta:
         managed = False
         db_table = 'work_annotation'
+        unique_together = ('work', 'annotation')
 
 
 class WorkAttribute(models.Model):
@@ -3147,30 +3361,18 @@ class WorkMeta(models.Model):
 
 
 class WorkRatingRaw(models.Model):
-    work = models.ForeignKey(Work, db_column='work')
+    work = models.ForeignKey(Work, db_column='work', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
     rating = models.SmallIntegerField()
 
     class Meta:
         managed = False
         db_table = 'work_rating_raw'
-
-
-class WorkSeries(models.Model):
-    work = models.IntegerField(blank=True, null=True)
-    series = models.IntegerField(blank=True, null=True)
-    relationship = models.IntegerField(blank=True, null=True)
-    link_order = models.IntegerField(blank=True, null=True)
-    link = models.IntegerField(blank=True, null=True)
-    text_value = models.TextField(blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'work_series'
+        unique_together = ('work', 'editor')
 
 
 class WorkTag(models.Model):
-    work = models.ForeignKey(Work, db_column='work')
+    work = models.ForeignKey(Work, db_column='work', primary_key=True)
     tag = models.ForeignKey(Tag, db_column='tag')
     count = models.IntegerField()
     last_updated = models.DateTimeField(blank=True, null=True)
@@ -3178,16 +3380,18 @@ class WorkTag(models.Model):
     class Meta:
         managed = False
         db_table = 'work_tag'
+        unique_together = ('work', 'tag')
 
 
 class WorkTagRaw(models.Model):
-    work = models.ForeignKey(Work, db_column='work')
+    work = models.ForeignKey(Work, db_column='work', primary_key=True)
     editor = models.ForeignKey(Editor, db_column='editor')
     tag = models.ForeignKey(Tag, db_column='tag')
 
     class Meta:
         managed = False
         db_table = 'work_tag_raw'
+        unique_together = ('work', 'editor', 'tag')
 
 
 class WorkType(models.Model):
